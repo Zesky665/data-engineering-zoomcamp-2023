@@ -60,6 +60,7 @@ jobs:
     defaults:
       run:
         shell: bash
+        working-directory: Week_1/Solution
 
     steps:
     # Checkout the repository to the GitHub Actions runner
