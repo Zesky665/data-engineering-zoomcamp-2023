@@ -98,9 +98,21 @@ jobs:
     # Generates an execution plan for Terraform
     - name: Terraform Plan
       run: terraform plan -input=false
+      env: 
+          name: ${{ secrets.NAME }}
+          prefect_account_id: ${{ secrets.PREFECT_ACCOUNT_ID }}
+          prefect_workspace_id: ${{ secrets.PREFECT_WORKSPACE_ID }}
+          prefect_api_key: ${{ secrets.PREFECT_API_KEY }}
+          vpc_id: ${{ secrets.VPC_ID }}
 
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Apply
       if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
+      env: 
+          name: ${{ secrets.NAME }}
+          prefect_account_id: ${{ secrets.PREFECT_ACCOUNT_ID }}
+          prefect_workspace_id: ${{ secrets.PREFECT_WORKSPACE_ID }}
+          prefect_api_key: ${{ secrets.PREFECT_API_KEY }}
+          vpc_id: ${{ secrets.VPC_ID }}
