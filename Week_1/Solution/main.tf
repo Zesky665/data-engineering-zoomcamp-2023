@@ -1,117 +1,49 @@
 terraform {
+  cloud {
+    organization = "ZhareC"
+
+    workspaces {
+      name = "example-workspace"
+    }
+  }
+}
+
+terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 4.16"
     }
   }
+
+  required_version = ">= 1.2.0"
 }
 
 provider "aws" {
   region = "eu-central-1"
 }
 
-data "aws_region" "current" {}
+resource "aws_instance" "prefect" {
+  ami           = "ami-03e08697c325f02ab"
+  instance_type = "t2.micro"
+  key_name = "prefect"
 
-resource "aws_secretsmanager_secret" "prefect_api_key" {
-  name = "prefect-api-key-${var.name}"
-}
-
-resource "aws_secretsmanager_secret_version" "prefect_api_key_version" {
-  secret_id     = aws_secretsmanager_secret.prefect_api_key.id
-  secret_string = var.prefect_api_key
-}
-
-resource "aws_iam_role" "prefect_agent_execution_role" {
-  name = "prefect-agent-execution-role-${var.name}"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      },
-    ]
-  })
-
-  inline_policy {
-    name = "ssm-allow-read-prefect-api-key-${var.name}"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = [
-            "kms:Decrypt",
-            "secretsmanager:GetSecretValue",
-            "ssm:GetParameters"
-          ]
-          Effect = "Allow"
-          Resource = [
-            aws_secretsmanager_secret.prefect_api_key.arn
-          ]
-        }
-      ]
-    })
-  }
-  // AmazonECSTaskExecutionRolePolicy is an AWS managed role for creating ECS tasks and services
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
-}
-
-resource "aws_iam_role" "prefect_agent_task_role" {
-  name  = "prefect-agent-task-role-${var.name}"
-  count = var.agent_task_role_arn == null ? 1 : 0
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      },
-    ]
-  })
-
-  inline_policy {
-    name = "prefect-agent-allow-ecs-task-${var.name}"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = [
-            "ec2:DescribeSubnets",
-            "ec2:DescribeVpcs",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:BatchGetImage",
-            "ecr:GetAuthorizationToken",
-            "ecr:GetDownloadUrlForLayer",
-            "ecs:DeregisterTaskDefinition",
-            "ecs:DescribeTasks",
-            "ecs:RegisterTaskDefinition",
-            "ecs:RunTask",
-            "iam:PassRole",
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:GetLogEvents",
-            "logs:PutLogEvents"
-          ]
-          Effect   = "Allow"
-          Resource = "*"
-        }
-      ]
-    })
+  tags = {
+    Name = var.instance_name
   }
 }
 
-resource "aws_cloudwatch_log_group" "prefect_agent_log_group" {
-  name              = "prefect-agent-log-group-${var.name}"
-  retention_in_days = var.agent_log_retention_in_days
+resource "aws_db_instance" "pg_db" {
+  allocated_storage    = 5
+  db_name              = "nyc_taxy_data"
+  engine               = "postgres"
+  engine_version       = "13.7"
+  instance_class       = "db.t3.micro"
+  username             = "db_user"
+  password             = var.db_password
+  skip_final_snapshot  = true
+
+    tags = {
+    Name = "nyc_taxi_data"
+  }
 }
-
-
