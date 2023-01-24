@@ -1,0 +1,1 @@
+prefect agent start -q $1 &
