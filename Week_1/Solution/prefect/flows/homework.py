@@ -69,14 +69,21 @@ def read_taxi_file():
     start = time.time()
     chunked_dfs = pd.read_csv('prefect/flows/downloads/nyc_green_2019_01.csv.gz', compression='gzip', 
                                  header=0, sep=',', quotechar='"', chunksize=200,
-                                 dtype={"VendorID": "int8", "payment_type": "int8", 
+                                 dtype={"VendorID": "int8", 
+                                        "payment_type": "int8", 
                                         "trip_type": "int8",
-                                        "passanger_count": "int8", "RatecodeID": "int8",
-                                        "PULocationID": "int8", "DOLocationID": "int8",
-                                        "tolls_amount": "float16", "fare_amount": "float16",
-                                        "extra": "float16", "mta_tax": "float16",
-                                        "tip_amount": "float16", "ehail_fee": "float16",
-                                        "improvement_surcharge": "float16", "total_amount": "float16",
+                                        "passanger_count": "int8", 
+                                        "RatecodeID": "int8",
+                                        "PULocationID": "int16", 
+                                        "DOLocationID": "int16",
+                                        "tolls_amount": "float16", 
+                                        "fare_amount": "float16",
+                                        "extra": "float16", 
+                                        "mta_tax": "float16",
+                                        "tip_amount": "float16", 
+                                        "ehail_fee": "float16",
+                                        "improvement_surcharge": "float16",
+                                        "total_amount": "float16",
                                         "congestion_surcharge": "float16"})
     end = time.time()
     read_delta = end-start
