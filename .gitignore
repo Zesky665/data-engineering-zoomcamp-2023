@@ -139,3 +139,10 @@ archive
 .gitignore
 Week_1/solution/.terraform/environment
 Week_1/solution/.terraform/modules/modules.json
+__init__.py
+*/__init__.py
+*/*/__init__.py
+*/*/*/__init__.py
+*/*/*/*/__init__.py
+*/*/*/*/*/__init__.py
+
