@@ -139,6 +139,7 @@ archive
 .gitignore
 Week_1/solution/.terraform/environment
 Week_1/solution/.terraform/modules/modules.json
+<<<<<<< HEAD
 __init__.py
 */__init__.py
 */*/__init__.py
@@ -147,3 +148,8 @@ __init__.py
 */*/*/*/*/__init__.py
 
 Week_1/Solution/prefect/flows/my_secrets.py
+=======
+*.pem
+*.pub
+__init__.py
+>>>>>>> ef875e0 (update gitignore)
