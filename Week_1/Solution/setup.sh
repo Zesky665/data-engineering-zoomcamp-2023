@@ -49,3 +49,18 @@ pip install prefect
 # step 6
 mylog 6 "Install s3fs"
 pip install s3fs
+
+# step 7
+pip install wget
+
+# step 8
+pip install numpy
+
+# step 9
+pip install pandas
+
+# step 10
+pip install sqlalchemy
+
+# step 11
+pip install psycopg2
