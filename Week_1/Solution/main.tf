@@ -38,8 +38,6 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-
-
 // Create a data object called "ubuntu" that holds the latest
 // Ubuntu 20.04 server AMI
 data "aws_ami" "ubuntu" {
