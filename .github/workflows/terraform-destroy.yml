@@ -88,7 +88,11 @@ jobs:
           name: ${{ secrets.NAME }}
           vpc_id: ${{ secrets.VPC_ID }}
           
+    - name: Create temporary variables file
+      id: variables
+      run: echo '${{ secrets.DB_PASSWORD }}' >> secrets.tfvars
+          
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Destroy
-      run: terraform destroy --auto-approve
+      run: terraform destroy -var-file="secrets.tfvars" --auto-approve
