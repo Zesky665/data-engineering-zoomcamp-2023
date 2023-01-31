@@ -299,7 +299,7 @@ resource "aws_db_instance" "prefect_database" {
   
   // The master user of our database. This is being set by the
   // db_username variable, which is being declared in our secrets file
-  username               = var.db_username
+  username               = "postgres"
   
   // The password for the master user. This is being set by the 
   // db_username variable, which is being declared in our secrets file

@@ -64,12 +64,6 @@ variable "my_ip" {
     sensitive   = true
 }
 
-variable "db_username" {
-    description = "Database master user"
-    type        = string
-    sensitive   = true
-}
-
 variable "db_password" {
     description = "Database master user password"
     type        = string
