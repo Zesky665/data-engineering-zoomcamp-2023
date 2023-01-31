@@ -90,7 +90,11 @@ jobs:
           prefect_workspace_id: ${{ secrets.PREFECT_WORKSPACE_ID }}
           prefect_api_key: ${{ secrets.PREFECT_API_KEY }}
           vpc_id: ${{ secrets.VPC_ID }}
-
+    
+    - name: Create temporary public key file
+      id: public-key
+      run: echo '${{ secrets.PUBLIC_KEY }}' >> prefect_kp.pub
+      
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Validate
       id: validate
