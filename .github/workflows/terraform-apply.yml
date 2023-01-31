@@ -108,6 +108,7 @@ jobs:
                           --var prefect_workspace_id="${{ secrets.PREFECT_WORKSPACE_ID }}" 
                           --var prefect_api_key="${{ secrets.PREFECT_API_KEY }}" 
                           --var vpc_id="${{ secrets.VPC_ID }}"
+                          -var-file="secrets.tfvars"
 
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
@@ -119,4 +120,5 @@ jobs:
                           --var prefect_workspace_id="${{ secrets.PREFECT_WORKSPACE_ID }}" 
                           --var prefect_api_key="${{ secrets.PREFECT_API_KEY }}" 
                           --var vpc_id="${{ secrets.VPC_ID }}"
+                          -var-file="secrets.tfvars"
                           --auto-approve
