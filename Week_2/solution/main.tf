@@ -228,19 +228,6 @@ resource "aws_security_group" "prefect_web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  // The second requirement we need to meet is "Only you should be 
-  // "able to access the EC2 instances via SSH." So we will create an 
-  // inbound rule that allows SSH traffic ONLY from your IP address
-  ingress {
-    description = "Allow SSH from my computer"
-    from_port   = "22"
-    to_port     = "22"
-    protocol    = "tcp"
-    // This is using the variable "my_ip"
-    cidr_blocks = ["${var.my_ip}/32"]
-  }
-
-
   // This outbound rule is allowing all outbound traffic
   // with the EC2 instances
   egress {
@@ -332,19 +319,6 @@ resource "aws_db_instance" "prefect_database" {
   skip_final_snapshot    = var.settings.database.skip_final_snapshot
 }
 
-// Create a key pair named "prefect_kp"
-resource "aws_key_pair" "prefect_kp" {
-  // Give the key pair a name
-  key_name   = "prefect_kp"
-  
-  // This is going to be the public key of our
-  // ssh key. The file directive grabs the file
-  // from a specific path. Since the public key
-  // was created in the same directory as main.tf
-  // we can just put the name
-  public_key = file("prefect_kp.pub")
-}
-
 // Create an EC2 instance named "prefect_web"
 resource "aws_instance" "prefect_web" {
   // count is the number of instance we want
@@ -366,9 +340,6 @@ resource "aws_instance" "prefect_web" {
   // "prefect_public_subnet" and putting the EC2 instance in there
   subnet_id              = aws_subnet.prefect_public_subnet[count.index].id
   
-  // The key pair to connect to the EC2 instance. We are using the "prefect_kp" key 
-  // pair that we created
-  key_name               = aws_key_pair.prefect_kp.key_name
   
   // The security groups of the EC2 instance. This takes a list, however we only
   // have 1 security group for the EC2 instances.

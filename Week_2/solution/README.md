@@ -30,7 +30,7 @@ Initiate the terraform script. You might be asked to login to terraform cloud.
 `terraform init`
 
 Check if you have all the values needed to apply the script. 
-`terraform plan`
+`terraform plan -var-file="secrets.tfvars"`
 
 Apply the script, this will build the infrasctructure, it will take a couple of minutes to execute. 
 `terraform apply -var-file="secrets.tfvars"`
