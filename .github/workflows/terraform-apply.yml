@@ -107,19 +107,6 @@ jobs:
           prefect_account_id: ${{ secrets.PREFECT_ACCOUNT_ID }}
           prefect_workspace_id: ${{ secrets.PREFECT_WORKSPACE_ID }}
           prefect_api_key: ${{ secrets.PREFECT_API_KEY }}
-          vpc_id: ${{ secrets.VPC_ID }}
-    
-    - name: Create temporary variables file
-      id: variables
-      run: |
-           touch secrets.tfvars
-           echo ${{ secrets.DB_PASSWORD }} >> secrets.tfvars
-           echo name=${{ github.event.inputs.name }} >> secrets.tfvars
-           echo prefect_account_id=${{ secrets.PREFECT_ACCOUNT_ID }} >> secrets.tfvars
-           echo prefect_workspace_id=${{ secrets.PREFECT_WORKSPACE_ID }} >> secrets.tfvars
-           echo prefect_api_key=${{ secrets.PREFECT_API_KEY }} >> secrets.tfvars
-           echo vpc_id=${{ env.vpc_id}} >> secrets.tfvars
-           
       
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Validate
@@ -128,7 +115,10 @@ jobs:
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
-      run: terraform plan -var-file="secrets.tfvars"
+      run: terraform plan -var name='${{ github.event.inputs.name }}'
+                          -var prefect_account_id='${prefect_account_id}'
+                          -var prefect_workspace_id='${prefect_workspace_id}'
+                          -var prefect_api_key='${prefect_api_key}'
 
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
