@@ -45,7 +45,7 @@ resource "aws_secretsmanager_secret_version" "prefect_api_key_version" {
 resource "aws_iam_role" "prefect_agent_execution_role" {
   name = "prefect-agent-execution-role-${var.name}"
 
-  assume_role_policiy = jsonencode({
+  assume_role_policy = jsonencode({
     Version = "2023-02-01"
     Statement = [
       {
@@ -145,7 +145,7 @@ resource "aws_security_group_rule" "https_outbound" {
   from_port = 443
   to_port = 443
   protocol = "tcp"
-  cidr_block = ["0.0.0.0/0"]
+  cidr_blocks = ["0.0.0.0/0"]
 }
 
 resource "aws_ecs_cluster" "prefect_agent_cluster" {
