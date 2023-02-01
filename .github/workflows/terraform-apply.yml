@@ -59,6 +59,11 @@ on:
         default: '1024'
         type: choice
         options: ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192']
+      name:
+        description: Name of the agent
+        required: true
+        default: 'prefect-default'
+        type: string
         
 permissions:
   contents: read
@@ -106,7 +111,14 @@ jobs:
     
     - name: Create temporary variables file
       id: variables
-      run: echo '${{ secrets.DB_PASSWORD }}' >> secrets.tfvars
+      run: |
+           echo '${{ secrets.DB_PASSWORD }}' >> secrets.tfvars
+           echo 'name=${{ name }}' >> secrets.tfvars
+           echo 'prefect_account_id=${{prefect_account_id}}' >> secrets.tfvars
+           echo 'prefect_workspace_id=${{prefect_workspace_id}}' >> secrets.tfvars
+           echo 'prefect_api_key=${{prefect_api_key}}' >> secrets.tfvars
+           echo 'vpc_id=${{vpc_id}}' >> secrets.tfvars
+           
       
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Validate
