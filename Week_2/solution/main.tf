@@ -45,7 +45,7 @@ resource "aws_secretsmanager_secret_version" "prefect_api_key_version" {
 resource "aws_iam_role" "prefect_agent_execution_role" {
   name = "prefect-agent-execution-role-${var.name}"
 
-  assume_role_policiy = jsoncode({
+  assume_role_policiy = jsonencode({
     Version = "2023-02-01"
     Statement = [
       {
@@ -60,7 +60,7 @@ resource "aws_iam_role" "prefect_agent_execution_role" {
 
   inline_policy {
     name = "ssm-allow-read-prefect-api-key-${var.name}"
-    policy = jsoncode({
+    policy = jsonencode({
       Version = "2023-02-01"
       Statement = [
         {
@@ -84,7 +84,7 @@ resource "aws_iam_role" "prefect_agent_task_role" {
   name = "prefect-agent-task-role-${var.name}"
   count = var.agent_task_role_arn == null ? 1 : 0
 
-  assume_role_policy = jsoncode({
+  assume_role_policy = jsonencode({
     Version = "2023-02-01"
     Statement = [
       {
@@ -99,7 +99,7 @@ resource "aws_iam_role" "prefect_agent_task_role" {
 
   inline_policy {
     name = "prefect-agent-allow-ecs-task-${var.name}"
-    policy = jsoncode({
+    policy = jsonencode({
       Version = "2023-02-01"
       Statement = [
         {
@@ -165,7 +165,7 @@ resource "aws_ecs_task_definition" "prefect_agent_task_definition" {
   requires_compatabilities = ["FARGATE"]
   network_mode = "awsvpc"
 
-  container_definitions = jsoncode([
+  container_definitions = jsonencode([
     {
       name = "prefect-agent-${var.name}"
       image = var.agent_image
