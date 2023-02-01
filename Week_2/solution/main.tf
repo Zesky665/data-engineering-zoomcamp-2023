@@ -32,13 +32,13 @@ provider "aws" {
 }
 
 # Here we are creating an AWS Secrets Manager resource 
-resource "aws_secretmanager_secret" "prefect_api_key" {
+resource "aws_secretsmanager_secret" "prefect_api_key" {
   name = "prefect-api-key-${var.name}"
 }
 
 # Here we are creating an AWS secrets resource that will hold the secret value
-resource "aws_secretmanager_secret_version" "prefect_api_key_version" {
-  secret_id = aws_secretmanager_secret.prefect_api_key.id
+resource "aws_secretsmanager_secret_version" "prefect_api_key_version" {
+  secret_id = aws_secretsmanager_secret.prefect_api_key.id
   secret_string = var.prefect_api_key
 }
 
@@ -66,12 +66,12 @@ resource "aws_iam_role" "prefect_agent_execution_role" {
         {
           Action = [
             "kms:Decrypt",
-            "secretmanager:GetSecretValue",
+            "secretsmanager:GetSecretValue",
             "ssm:GetParamaters"
           ]
           Effect = "Allow"
           Resource = [
-            aws_secretmanager_secret.prefect_api_key.arn
+            aws_secretsmanager_secret.prefect_api_key.arn
           ]
         }
       ]
