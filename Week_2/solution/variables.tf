@@ -44,11 +44,6 @@ variable "agent_queue_name" {
   type        = string
 }
 
-variable "agent_subnets" {
-  description = "Subnets to place the agent in."
-  type        = list(string)
-}
-
 variable "agent_task_role_arn" {
   description = "Optional task role ARN to pass to the agent. If not defined, a task role will be created."
   default     = null
@@ -77,7 +72,27 @@ variable "prefect_api_key" {
   sensitive   = true
 }
 
-variable "vpc_id" {
-  description = "VPC ID in which to create all resources"
+variable "vpc_cidr_block" {
+  description = "CIDR block for VPC"
   type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "subnet_count" {
+  description = "Number of subnets"
+  type        = map(number)
+  default = {
+    public = 2
+  }
+}
+
+variable "public_subnet_cidr_blocks" {
+  description = "Availability CIDR blocks for public subnets"
+  type        = list(string)
+  default = [
+    "10.0.1.0/24",
+    "10.0.2.0/24",
+    "10.0.3.0/24",
+    "10.0.4.0/24"
+  ]
 }
