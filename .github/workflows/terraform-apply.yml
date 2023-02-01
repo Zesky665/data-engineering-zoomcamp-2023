@@ -112,12 +112,13 @@ jobs:
     - name: Create temporary variables file
       id: variables
       run: |
-           echo '${{ secrets.DB_PASSWORD }}\n' >> secrets.tfvars
-           echo 'name=${{ github.event.inputs.cpu }}\n' >> secrets.tfvars
-           echo 'prefect_account_id=${{ secrets.PREFECT_ACCOUNT_ID }}\n' >> secrets.tfvars
-           echo 'prefect_workspace_id=${{ secrets.PREFECT_WORKSPACE_ID }}\n' >> secrets.tfvars
-           echo 'prefect_api_key=${{ secrets.PREFECT_API_KEY }}\n' >> secrets.tfvars
-           echo 'vpc_id=${{ secrets.VPC_ID }}\n' >> secrets.tfvars
+           touch secrets.tfvars
+           echo "${{ secrets.DB_PASSWORD }}" >> secrets.tfvars
+           echo name="${{ github.event.inputs.cpu }}" >> secrets.tfvars
+           echo prefect_account_id="${{ secrets.PREFECT_ACCOUNT_ID }}" >> secrets.tfvars
+           echo prefect_workspace_id="${{ secrets.PREFECT_WORKSPACE_ID }}" >> secrets.tfvars
+           echo prefect_api_key="${{ secrets.PREFECT_API_KEY }}" >> secrets.tfvars
+           echo vpc_id="${{ secrets.VPC_ID }}" >> secrets.tfvars
            
       
     # Checks that all Terraform configuration files adhere to a canonical format
