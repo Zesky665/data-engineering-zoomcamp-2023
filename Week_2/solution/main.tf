@@ -192,7 +192,7 @@ resource "aws_ecs_task_definition" "prefect_agent_task_definition" {
         logDriver = "awslogs"
         option = {
           awslogs-group = aws_cloudwatch_log_group.prefect_agent_log_group.name
-          awslogs-region = data.aws_region.current.name
+          awslogs-region = var.aws_region
           awslogs-stream-prefic = "prefect-agent-${var.name}"
         }
       }
