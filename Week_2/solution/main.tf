@@ -199,6 +199,18 @@ resource "aws_security_group_rule" "https_outbound" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
+resource "aws_s3_bucket" "bucket" {
+  bucket = "zesky665-prefect-bucket"
+  tags = {
+    name = "prefect bucket"
+  }
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
 resource "aws_ecs_cluster" "prefect_agent_cluster" {
   name = "prefect-agent-${var.name}"
 }
