@@ -153,3 +153,4 @@ Week_1/Solution/prefect/flows/my_secrets.py
 *.pub
 __init__.py
 >>>>>>> ef875e0 (update gitignore)
+Week_2/solution/.terraform/environment

@@ -95,7 +95,7 @@ resource "aws_iam_role" "prefect_agent_execution_role" {
   name = "prefect-agent-execution-role-${var.name}"
 
   assume_role_policy = jsonencode({
-    Version = "2023-02-01"
+    Version = "2012-10-17"
     Statement = [
       {
         Action = "sts:assumeRole"
@@ -110,7 +110,7 @@ resource "aws_iam_role" "prefect_agent_execution_role" {
   inline_policy {
     name = "ssm-allow-read-prefect-api-key-${var.name}"
     policy = jsonencode({
-      Version = "2023-02-01"
+      Version = "2012-10-17"
       Statement = [
         {
           Action = [
@@ -134,7 +134,7 @@ resource "aws_iam_role" "prefect_agent_task_role" {
   count = var.agent_task_role_arn == null ? 1 : 0
 
   assume_role_policy = jsonencode({
-    Version = "2023-02-01"
+    Version = "2012-10-17"
     Statement = [
       {
         Action = "sts:AssumeRole"
@@ -149,7 +149,7 @@ resource "aws_iam_role" "prefect_agent_task_role" {
   inline_policy {
     name = "prefect-agent-allow-ecs-task-${var.name}"
     policy = jsonencode({
-      Version = "2023-02-01"
+      Version = "2012-10-17"
       Statement = [
         {
           Action = [
