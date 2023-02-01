@@ -162,7 +162,7 @@ resource "aws_ecs_task_definition" "prefect_agent_task_definition" {
   cpu = var.agent_cpu
   memory = var.agent_memory
 
-  requires_compatabilities = ["FARGATE"]
+  requires_compatibilities = ["FARGATE"]
   network_mode = "awsvpc"
 
   container_definitions = jsonencode([
