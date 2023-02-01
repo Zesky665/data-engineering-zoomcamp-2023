@@ -42,11 +42,29 @@
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-name: 'Terraform-Destroy'
+name: 'Terraform-Deploy'
 
 on:
-  workflow_dispatch:
-
+ workflow_dispatch:
+    inputs:
+      cpu:
+        description: CPU for the agent
+        required: true
+        default: '512'
+        type: choice
+        options: ['256', '512', '1024', '2048', '4096']
+      memory:
+        description: Memory for the agent
+        required: true
+        default: '1024'
+        type: choice
+        options: ['512', '1024', '2048', '4096', '5120', '6144', '7168', '8192']
+      name:
+        description: Name of the agent
+        required: true
+        default: 'prefect-default'
+        type: string
+        
 permissions:
   contents: read
 
@@ -81,18 +99,21 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: eu-central-1 
 
- # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: terraform init
       env: 
           name: ${{ secrets.NAME }}
-          vpc_id: ${{ secrets.VPC_ID }}
-          
-    - name: Create temporary variables file
-      id: variables
-      run: echo '${{ secrets.DB_PASSWORD }}' >> secrets.tfvars
-          
+          prefect_account_id: ${{ secrets.PREFECT_ACCOUNT_ID }}
+          prefect_workspace_id: ${{ secrets.PREFECT_WORKSPACE_ID }}
+          prefect_api_key: ${{ secrets.PREFECT_API_KEY }}
+      
+
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-    - name: Terraform Destroy
-      run: terraform destroy -var-file="secrets.tfvars" --auto-approve
+    - name: Terraform Apply
+      run: terraform destroy -var name='${{ github.event.inputs.name }}'
+                             -var prefect_account_id='${prefect_account_id}'
+                             -var prefect_workspace_id='${prefect_workspace_id}'
+                             -var prefect_api_key='${prefect_api_key}' 
+                             --auto-approve
