@@ -5,7 +5,7 @@ terraform {
     organization = "ZhareC"
 
     workspaces {
-      name = "example-workspace"
+      name = "zoomcamp-workspaces"
     }
   }
 }
@@ -31,348 +31,187 @@ provider "aws" {
   region = var.aws_region
 }
 
-// This data object is going to be
-// holding all the available availability
-// zones in our defined region
-data "aws_availability_zones" "available" {
-  state = "available"
+# Here we are creating an AWS Secrets Manager resource 
+resource "aws_secretmanager_secret" "prefect_api_key" {
+  name = "prefect-api-key-${var.name}"
 }
 
-// Create a data object called "ubuntu" that holds the latest
-// Ubuntu 20.04 server AMI
-data "aws_ami" "ubuntu" {
-  // We want the most recent AMI
-  most_recent = "true"
-
-  // We are filtering through the names of the AMIs. We want the 
-  // Ubuntu 20.04 server
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
-  }
-
-  // We are filtering through the virtualization type to make sure
-  // we only find AMIs with a virtualization type of hvm
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-  
-  // This is the ID of the publisher that created the AMI. 
-  // The publisher of Ubuntu 20.04 LTS Focal is Canonical 
-  // and their ID is 099720109477
-  owners = ["099720109477"]
+# Here we are creating an AWS secrets resource that will hold the secret value
+resource "aws_secretmanager_secret_version" "prefect_api_key_version" {
+  secret_id = aws_secretmanager_secret.prefect_api_key.id
+  secret_string = var.prefect_api_key
 }
 
-// Create a VPC named "prefect_vpc"
-resource "aws_vpc" "prefect_vpc" {
-  // Here we are setting the CIDR block of the VPC
-  // to the "vpc_cidr_block" variable
-  cidr_block           = var.vpc_cidr_block
-  // We want DNS hostnames enabled for this VPC
-  enable_dns_hostnames = true
+resource "aws_iam_role" "prefect_agent_execution_role" {
+  name = "prefect-agent-execution-role-${var.name}"
 
-  // We are tagging the VPC with the name "prefect_vpc"
-  tags = {
-    Name = "prefect_vpc"
+  assume_role_policiy = jsoncode({
+    Version = "2023-02-01"
+    Statement = [
+      {
+        Action = "sts:assumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  inline_policy {
+    name = "ssm-allow-read-prefect-api-key-${var.name}"
+    policy = jsoncode({
+      Version = "2023-02-01"
+      Statement = [
+        {
+          Action = [
+            "kms:Decrypt",
+            "secretmanager:GetSecretValue",
+            "ssm:GetParamaters"
+          ]
+          Effect = "Allow"
+          Resource = [
+            aws_secretmanager_secret.prefect_api_key.arn
+          ]
+        }
+      ]
+    })
   }
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
 }
 
-// Create an internet gateway named "prefect_igw"
-// and attach it to the "prefect_vpc" VPC
-resource "aws_internet_gateway" "prefect_igw" {
-  // Here we are attaching the IGW to the 
-  // prefect_vpc VPC
-  vpc_id = aws_vpc.prefect_vpc.id
+resource "aws_iam_role" "prefect_agent_task_role" {
+  name = "prefect-agent-task-role-${var.name}"
+  count = var.agent_task_role_arn == null ? 1 : 0
 
-  // We are tagging the IGW with the name prefect_igw
-  tags = {
-    Name = "prefect_igw"
-  }
-}
+  assume_role_policy = jsoncode({
+    Version = "2023-02-01"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-task.amazonaws.com"
+        }
+      },
+    ]
+  })
 
-// Create a group of public subnets based on the variable subnet_count.public
-resource "aws_subnet" "prefect_public_subnet" {
-  // count is the number of resources we want to create
-  // here we are referencing the subnet_count.public variable which
-  // current assigned to 1 so only 1 public subnet will be created
-  count             = var.subnet_count.public
-  
-  // Put the subnet into the "prefect_vpc" VPC
-  vpc_id            = aws_vpc.prefect_vpc.id
-  
-  // We are grabbing a CIDR block from the "public_subnet_cidr_blocks" variable
-  // since it is a list, we need to grab the element based on count,
-  // since count is 1, we will be grabbing the first cidr block 
-  // which is going to be 10.0.1.0/24
-  cidr_block        = var.public_subnet_cidr_blocks[count.index]
-  
-  // We are grabbing the availability zone from the data object we created earlier
-  // Since this is a list, we are grabbing the name of the element based on count,
-  // so since count is 1, and our region is us-east-2, this should grab us-east-2a
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  // We are tagging the subnet with a name of "prefect_public_subnet_" and
-  // suffixed with the count
-  tags = {
-    Name = "prefect_public_subnet_${count.index}"
-  }
-}
-
-// Create a group of private subnets based on the variable subnet_count.private
-resource "aws_subnet" "prefect_private_subnet" {
-  // count is the number of resources we want to create
-  // here we are referencing the subnet_count.private variable which
-  // current assigned to 2, so 2 private subnets will be created
-  count             = var.subnet_count.private
-  
-  // Put the subnet into the "prefect_vpc" VPC
-  vpc_id            = aws_vpc.prefect_vpc.id
-  
-  // We are grabbing a CIDR block from the "private_subnet_cidr_blocks" variable
-  // since it is a list, we need to grab the element based on count,
-  // since count is 2, the first subnet will grab the CIDR block 10.0.101.0/24
-  // and the second subnet will grab the CIDR block 10.0.102.0/24
-  cidr_block        = var.private_subnet_cidr_blocks[count.index]
-  
-  // We are grabbing the availability zone from the data object we created earlier
-  // Since this is a list, we are grabbing the name of the element based on count,
-  // since count is 2, and our region is us-east-2, the first subnet should
-  // grab us-east-2a and the second will grab us-east-2b
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  // We are tagging the subnet with a name of "prefect_private_subnet_" and
-  // suffixed with the count
-  tags = {
-    Name = "prefect_private_subnet_${count.index}"
+  inline_policy {
+    name = "prefect-agent-allow-ecs-task-${var.name}"
+    policy = jsoncode({
+      Version = "2023-02-01"
+      Statement = [
+        {
+          Action = [
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVpcs",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:BatchGetImage",
+            "ecr:GetAuthorizationToken",
+            "ecr:GetDownloadUrlForLayer",
+            "ecs:DeregisterTaskDefinition",
+            "ecs:DescribeTasks",
+            "ecs:RegisterTaskDefinition",
+            "ecs:RunTask",
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:GetLogStream",
+            "logs:PutLogEvents"
+          ]
+          Effect = "Allow"
+          Resource = "*"
+        }
+      ]
+    })
   }
 }
 
-// Create a public route table named "prefect_public_rt"
-resource "aws_route_table" "prefect_public_rt" {
-  // Put the route table in the "prefect_vpc" VPC
-  vpc_id = aws_vpc.prefect_vpc.id
+resource "aws_cloudwatch_log_group" "prefect_agent_log_group" {
+  name = "prefect-agent-log-group-${var.name}"
+  retention_in_days = var.agent_log_retention_in_days
+}
 
-  // Since this is the public route table, it will need
-  // access to the internet. So we are adding a route with
-  // a destination of 0.0.0.0/0 and targeting the Internet 	 
-  // Gateway "prefect_igw"
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.prefect_igw.id
+resource "aws_security_group" "prefect_agent" {
+  name = "prefect-agent-sg-${var.name}"
+  description = "ECS Prefect Agent"
+  vpc_id = var.vpc_id
+}
+
+resource "aws_security_group_rule" "https_outbound" {
+  description = "HTTPS outbound"
+  type = "egress"
+  security_group_id = aws_security_group.prefect_agent.id
+  from_port = 443
+  to_port = 443
+  protocol = "tcp"
+  cidr_block = ["0.0.0.0/0"]
+}
+
+resource "aws_ecs_cluster" "prefect_agent_cluster" {
+  name = "prefect-agent-${var.name}"
+}
+
+resource "aws_ecs_cluster_capacity_providers" "prefect_agent_cluster_capacity_providers" {
+  cluster_name = aws_ecs_cluster.prefect_agent_cluster.name
+  capacity_providers = ["FARGATE"]
+}
+
+resource "aws_ecs_task_definition" "prefect_agent_task_definition" {
+  family = "prefect-agent-${var.name}"
+  cpu = var.agent_cpu
+  memory = var.agent_memory
+
+  requires_compatabilities = ["FARGATE"]
+  network_mode = "awsvpc"
+
+  container_definitions = jsoncode([
+    {
+      name = "prefect-agent-${var.name}"
+      image = var.agent_image
+      command = ["prefect", "agent", "start", "-q", var.agent_queue_name]
+      cpu = var.agent_cpu
+      memory = var.agent_memory
+      environment = [
+        {
+          name = "PREFECT_API_URL"
+          value = "https://api.prefect.cloud/api/accounts/${var.prefect_account_id}/workspaces/${var.prefect_workspace_id}"
+        },
+        {
+          name = "EXTRA_PIP_PACKAGES"
+          value = var.agent_extra_pip_packages
+        }
+      ]
+      secrets = [
+        {
+          name = "PREFECT_API_KEY"
+          valueFrom = var.agent_extra_pip_packages
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        option = {
+          awslogs-group = aws_cloudwatch_log_group.prefect_agent_log_group.name
+          awslogs-region = data.aws_region.current.name
+          awslogs-stream-prefic = "prefect-agent-${var.name}"
+        }
+      }
   }
+  ])
+  execution_role_arn = aws_iam_role.prefect_agent_execution_role.arn
+  task_role_arn = var.agent_task_role_arn == null ? aws_iam_role.prefect_agent_task_role[0].arn : var.agent_task_role_arn
 }
 
-// Here we are going to add the public subnets to the 
-// "tutorial_public_rt" route table
-resource "aws_route_table_association" "public" {
-  // count is the number of subnets we want to associate with
-  // this route table. We are using the subnet_count.public variable
-  // which is currently 1, so we will be adding the 1 public subnet
-  count          = var.subnet_count.public
-  
-  // Here we are making sure that the route table is
-  // "prefect_public_rt" from above
-  route_table_id = aws_route_table.prefect_public_rt.id
-  
-  // This is the subnet ID. Since the "prefect_public_subnet" is a 
-  // list of the public subnets, we need to use count to grab the
-  // subnet element and then grab the id of that subnet
-  subnet_id      = 	aws_subnet.prefect_public_subnet[count.index].id
-}
+resource "aws_ecs_service" "prefect_agent_service" {
+  name = "prefect-agent-${var.name}"
+  cluster = aws_ecs_cluster.prefect_agent_cluster.id
+  desired_count = var.agent_desired_count
+  launch_type = "FARGATE"
 
-// Create a private route table named "prefect_private_rt"
-resource "aws_route_table" "prefect_private_rt" {
-  // Put the route table in the "prefect_VPC" VPC
-  vpc_id = aws_vpc.prefect_vpc.id
-  
-  // Since this is going to be a private route table, 
-  // we will not be adding a route
-}
-
-// Here we are going to add the private subnets to the
-// route table "prefect_private_rt"
-resource "aws_route_table_association" "private" {
-  // count is the number of subnets we want to associate with
-  // the route table. We are using the subnet_count.private variable
-  // which is currently 2, so we will be adding the 2 private subnets
-  count          = var.subnet_count.private
-  
-  // Here we are making sure that the route table is
-  // "prefect_private_rt" from above
-  route_table_id = aws_route_table.prefect_private_rt.id
-  
-  // This is the subnet ID. Since the "prefect_private_subnet" is a
-  // list of private subnets, we need to use count to grab the
-  // subnet element and then grab the ID of that subnet
-  subnet_id      = aws_subnet.prefect_private_subnet[count.index].id
-}
-
-// Create a security for the EC2 instances called "prefect_web_sg"
-resource "aws_security_group" "prefect_web_sg" {
-  // Basic details like the name and description of the SG
-  name        = "prefect_web_sg"
-  description = "Security group for prefect web servers"
-  // We want the SG to be in the "prefect_vpc" VPC
-  vpc_id      = aws_vpc.prefect_vpc.id
-
-  // The first requirement we need to meet is "EC2 instances should 
-  // be accessible anywhere on the internet via HTTP." So we will 
-  // create an inbound rule that allows all traffic through
-  // TCP port 80.
-  ingress {
-    description = "Allow all traffic through HTTP"
-    from_port   = "80"
-    to_port     = "80"
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  network_configuration {
+    security_groups = [aws_security_group.prefect_agent.id]
+    assign_public_ip = true 
+    subnets = var.agent_subnets
   }
-
-  // This outbound rule is allowing all outbound traffic
-  // with the EC2 instances
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  // Here we are tagging the SG with the name "prefect_web_sg"
-  tags = {
-    Name = "prefect_web_sg"
-  }
-}
-
-resource "aws_security_group" "prefect_db_sg" {
-    name            = "prefect_db_sg"
-    description     = "Security group for prefect databases"
-    vpc_id          = aws_vpc.prefect_vpc.id 
-
-    ingress {
-        description         = "Allow PostgreSQL traffic from only the web sg"
-        from_port           = "5432"
-        to_port             = "5432"
-        protocol            = "tcp"
-        security_groups     = [aws_security_group.prefect_web_sg.id]
-    }
-
-    tags = {
-        Name = "prefect_db_sg"
-    }
-} 
-
-// Create a db subnet group named "prefect_db_subnet_group"
-resource "aws_db_subnet_group" "prefect_db_subnet_group" {
-  // The name and description of the db subnet group
-  name        = "prefect_db_subnet_group"
-  description = "DB subnet group for prefect"
-  
-  // Since the db subnet group requires 2 or more subnets, we are going to
-  // loop through our private subnets in "prefect_private_subnet" and
-  // add them to this db subnet group
-  subnet_ids  = [for subnet in aws_subnet.prefect_private_subnet : subnet.id]
-}
-
-// Create a DB instance called "prefect_database"
-resource "aws_db_instance" "prefect_database" {
-  // The amount of storage in gigabytes that we want for the database. This is 
-  // being set by the settings.database.allocated_storage variable, which is 
-  // set to 10
-  allocated_storage      = var.settings.database.allocated_storage
-  
-  // The engine we want for our database. This is being set by the 
-  // settings.database.engine variable, which is set to "postgres"
-  engine                 = var.settings.database.engine
-  
-  // The version of our database engine. This is being set by the 
-  // settings.database.engine_version variable, which is set to "13.7"
-  engine_version         = var.settings.database.engine_version
-  
-  // The instance type for our DB. This is being set by the 
-  // settings.database.instance_class variable, which is set to "db.t2.micro"
-  instance_class         = var.settings.database.instance_class
-  
-  // This is the name of our database. This is being set by the
-  // settings.database.db_name variable, which is set to "prefect"
-  db_name                = var.settings.database.db_name
-  
-  // The master user of our database. This is being set by the
-  // db_username variable, which is being declared in our secrets file
-  username               = "postgres"
-  
-  // The password for the master user. This is being set by the 
-  // db_username variable, which is being declared in our secrets file
-  password               = var.db_password
-  
-  // This is the DB subnet group "prefect_db_subnet_group"
-  db_subnet_group_name   = aws_db_subnet_group.prefect_db_subnet_group.id
-  
-  // This is the security group for the database. It takes a list, but since
-  // we only have 1 security group for our db, we are just passing in the
-  // "prefect_db_sg" security group
-  vpc_security_group_ids = [aws_security_group.prefect_db_sg.id]
-  
-  // This refers to the skipping final snapshot of the database. It is a 
-  // boolean that is set by the settings.database.skip_final_snapshot
-  // variable, which is currently set to true.
-  skip_final_snapshot    = var.settings.database.skip_final_snapshot
-}
-
-// Create an EC2 instance named "prefect_web"
-resource "aws_instance" "prefect_web" {
-  // count is the number of instance we want
-  // since the variable settings.web_app.cont is set to 1, we will only get 1 EC2
-  count                  = var.settings.web_app.count
-  
-  // Here we need to select the ami for the EC2. We are going to use the
-  // ami data object we created called ubuntu, which is grabbing the latest
-  // Ubuntu 20.04 ami
-  ami                    = data.aws_ami.ubuntu.id
-  
-  // This is the instance type of the EC2 instance. The variable
-  // settings.web_app.instance_type is set to "t2.micro"
-  instance_type          = var.settings.web_app.instance_type
-  
-  // The subnet ID for the EC2 instance. Since "prefect_public_subnet" is a list
-  // of public subnets, we want to grab the element based on the count variable.
-  // Since count is 1, we will be grabbing the first subnet in  	
-  // "prefect_public_subnet" and putting the EC2 instance in there
-  subnet_id              = aws_subnet.prefect_public_subnet[count.index].id
-  
-  
-  // The security groups of the EC2 instance. This takes a list, however we only
-  // have 1 security group for the EC2 instances.
-  vpc_security_group_ids = [aws_security_group.prefect_web_sg.id]
-
-  // We are tagging the EC2 instance with the name "prefect_db_" followed by
-  // the count index
-  tags = {
-    Name = "prefect_web_${count.index}"
-  }
-}
-
-// Create an Elastic IP named "prefect_web_eip" for each
-// EC2 instance
-resource "aws_eip" "prefect_web_eip" {
-	// count is the number of Elastic IPs to create. It is
-	// being set to the variable settings.web_app.count which
-	// refers to the number of EC2 instances. We want an
-	// Elastic IP for every EC2 instance
-  count    = var.settings.web_app.count
-
-	// The EC2 instance. Since prefect_web is a list of 
-	// EC2 instances, we need to grab the instance by the 
-	// count index. Since the count is set to 1, it is
-	// going to grab the first and only EC2 instance
-  instance = aws_instance.prefect_web[count.index].id
-
-	// We want the Elastic IP to be in the VPC
-  vpc      = true
-
-	// Here we are tagging the Elastic IP with the name
-	// "prefect_web_eip_" followed by the count index
-  tags = {
-    Name = "prefect_web_eip_${count.index}"
-  }
+  task_definition = aws_ecs_task_definition.prefect_agent_task_definition.arn
 }

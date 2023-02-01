@@ -1,21 +1,24 @@
-output "web_public_ip" {
-    description     = "The public I address of the web server" 
-    value           = aws_eip.prefect_web_eip[0].public_ip 
-    depends_on      = [aws_eip.prefect_web_eip]
+output "prefect_agent_service_id" {
+    description     = "The service id of the prefect agent" 
+    value           = aws_ecs_service.prefect_agent_service.id
 }
 
-output "web_public_dns" {
-    description     = "The public DNS address of the web server"
-    value           = aws_eip.prefect_web_eip[0].public_dns
-    depends_on      = [aws_eip.prefect_web_eip]
+output "prefect_agent_execution_role_arn" {
+    description     = "The prefect agent execution role arn"
+    value           = aws_iam_role.prefect_agent_execution_role.arn
 }
 
-output "database_endpoint" {
-    description     = "The endpoint of the database"
-    value           = aws_db_instance.prefect_database.address 
+output "prefect_agent_task_role_arn" {
+    description     = "The prefect agent task role arn"
+    value           = var.agent_task_role_arn == null ? aws_iam_role.prefect_agent_task_role[0].arn : var.agent_task_role_arn
 }
 
-output "database_port" {
-    description     = "The port of the database"
-    value           = aws_db_instance.prefect_database.port
+output "prefect_agent_security_group" {
+    description     = "The prefect security group id"
+    value           = aws_security_group.prefect_agent.id
+}
+
+output "prefect_agent_cluster_name" {
+    description = "The prefect cluster name"
+    value = aws_ecs_cluster.prefect_agent_cluster.name
 }
