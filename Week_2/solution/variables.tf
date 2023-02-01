@@ -34,7 +34,7 @@ variable "agent_log_retention_in_days" {
 
 variable "agent_memory" {
     description = "Prefect queue that the agent should listen to."
-    default = "default"
+    default = 2048
     type = number
 }
 
