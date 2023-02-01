@@ -115,10 +115,10 @@ jobs:
            touch secrets.tfvars
            echo "${{ secrets.DB_PASSWORD }}" >> secrets.tfvars
            echo name="${{ github.event.inputs.name }}" >> secrets.tfvars
-           echo prefect_account_id="${{prefect_account_id}}" >> secrets.tfvars
-           echo prefect_workspace_id="${{prefect_workspace_id}}" >> secrets.tfvars
-           echo prefect_api_key="${{prefect_api_key}}" >> secrets.tfvars
-           echo vpc_id="${{vpc_id}}" >> secrets.tfvars
+           echo prefect_account_id="${{ env.prefect_account_id}}" >> secrets.tfvars
+           echo prefect_workspace_id="${{ env.prefect_workspace_id}}" >> secrets.tfvars
+           echo prefect_api_key="${{ env.prefect_api_key}}" >> secrets.tfvars
+           echo vpc_id="${{ env.vpc_id}}" >> secrets.tfvars
            
       
     # Checks that all Terraform configuration files adhere to a canonical format
