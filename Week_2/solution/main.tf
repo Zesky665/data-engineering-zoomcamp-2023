@@ -38,7 +38,7 @@ resource "aws_secretsmanager_secret" "prefect_api_key" {
 
 # Here we are creating an AWS secrets resource that will hold the secret value
 resource "aws_secretsmanager_secret_version" "prefect_api_key_version" {
-  secret_id = aws_secretsmanager_secret.prefect_api_key.id
+  secret_id     = aws_secretsmanager_secret.prefect_api_key.id
   secret_string = var.prefect_api_key
 }
 
@@ -81,7 +81,7 @@ resource "aws_iam_role" "prefect_agent_execution_role" {
 }
 
 resource "aws_iam_role" "prefect_agent_task_role" {
-  name = "prefect-agent-task-role-${var.name}"
+  name  = "prefect-agent-task-role-${var.name}"
   count = var.agent_task_role_arn == null ? 1 : 0
 
   assume_role_policy = jsonencode({
@@ -119,7 +119,7 @@ resource "aws_iam_role" "prefect_agent_task_role" {
             "logs:GetLogStream",
             "logs:PutLogEvents"
           ]
-          Effect = "Allow"
+          Effect   = "Allow"
           Resource = "*"
         }
       ]
@@ -128,24 +128,24 @@ resource "aws_iam_role" "prefect_agent_task_role" {
 }
 
 resource "aws_cloudwatch_log_group" "prefect_agent_log_group" {
-  name = "prefect-agent-log-group-${var.name}"
+  name              = "prefect-agent-log-group-${var.name}"
   retention_in_days = var.agent_log_retention_in_days
 }
 
 resource "aws_security_group" "prefect_agent" {
-  name = "prefect-agent-sg-${var.name}"
+  name        = "prefect-agent-sg-${var.name}"
   description = "ECS Prefect Agent"
-  vpc_id = var.vpc_id
+  vpc_id      = var.vpc_id
 }
 
 resource "aws_security_group_rule" "https_outbound" {
-  description = "HTTPS outbound"
-  type = "egress"
+  description       = "HTTPS outbound"
+  type              = "egress"
   security_group_id = aws_security_group.prefect_agent.id
-  from_port = 443
-  to_port = 443
-  protocol = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
 }
 
 resource "aws_ecs_cluster" "prefect_agent_cluster" {
@@ -153,65 +153,65 @@ resource "aws_ecs_cluster" "prefect_agent_cluster" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "prefect_agent_cluster_capacity_providers" {
-  cluster_name = aws_ecs_cluster.prefect_agent_cluster.name
+  cluster_name       = aws_ecs_cluster.prefect_agent_cluster.name
   capacity_providers = ["FARGATE"]
 }
 
 resource "aws_ecs_task_definition" "prefect_agent_task_definition" {
   family = "prefect-agent-${var.name}"
-  cpu = var.agent_cpu
+  cpu    = var.agent_cpu
   memory = var.agent_memory
 
   requires_compatibilities = ["FARGATE"]
-  network_mode = "awsvpc"
+  network_mode             = "awsvpc"
 
   container_definitions = jsonencode([
     {
-      name = "prefect-agent-${var.name}"
-      image = var.agent_image
+      name    = "prefect-agent-${var.name}"
+      image   = var.agent_image
       command = ["prefect", "agent", "start", "-q", var.agent_queue_name]
-      cpu = var.agent_cpu
-      memory = var.agent_memory
+      cpu     = var.agent_cpu
+      memory  = var.agent_memory
       environment = [
         {
-          name = "PREFECT_API_URL"
+          name  = "PREFECT_API_URL"
           value = "https://api.prefect.cloud/api/accounts/${var.prefect_account_id}/workspaces/${var.prefect_workspace_id}"
         },
         {
-          name = "EXTRA_PIP_PACKAGES"
+          name  = "EXTRA_PIP_PACKAGES"
           value = var.agent_extra_pip_packages
         }
       ]
       secrets = [
         {
-          name = "PREFECT_API_KEY"
+          name      = "PREFECT_API_KEY"
           valueFrom = var.agent_extra_pip_packages
         }
       ]
       logConfiguration = {
         logDriver = "awslogs"
         option = {
-          awslogs-group = aws_cloudwatch_log_group.prefect_agent_log_group.name
-          awslogs-region = var.aws_region
+          awslogs-group         = aws_cloudwatch_log_group.prefect_agent_log_group.name
+          awslogs-region        = var.aws_region
           awslogs-stream-prefic = "prefect-agent-${var.name}"
         }
       }
-  }
+    }
   ])
   execution_role_arn = aws_iam_role.prefect_agent_execution_role.arn
-  task_role_arn = var.agent_task_role_arn == null ? aws_iam_role.prefect_agent_task_role[0].arn : var.agent_task_role_arn
+  task_role_arn      = var.agent_task_role_arn == null ? aws_iam_role.prefect_agent_task_role[0].arn : var.agent_task_role_arn
 }
 
 resource "aws_ecs_service" "prefect_agent_service" {
-  name = "prefect-agent-${var.name}"
-  cluster = aws_ecs_cluster.prefect_agent_cluster.id
+  name          = "prefect-agent-${var.name}"
+  cluster       = aws_ecs_cluster.prefect_agent_cluster.id
   desired_count = var.agent_desired_count
-  launch_type = "FARGATE"
+  launch_type   = "FARGATE"
 
   network_configuration {
-    security_groups = [aws_security_group.prefect_agent.id]
-    assign_public_ip = true 
-    subnets = var.agent_subnets
+    security_groups  = [aws_security_group.prefect_agent.id]
+    assign_public_ip = true
+    subnets          = var.agent_subnets
   }
   task_definition = aws_ecs_task_definition.prefect_agent_task_definition.arn
 }
