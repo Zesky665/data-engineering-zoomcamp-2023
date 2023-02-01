@@ -94,11 +94,11 @@ resource "aws_subnet" "prefect_public_subnet" {
 resource "aws_iam_role" "prefect_agent_execution_role" {
   name = "prefect-agent-execution-role-${var.name}"
 
-  assume_role_policy = jsonencode({
+assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:assumeRole"
+        Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
           Service = "ecs-tasks.amazonaws.com"
