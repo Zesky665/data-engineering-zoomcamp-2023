@@ -94,7 +94,7 @@ resource "aws_subnet" "prefect_public_subnet" {
 resource "aws_iam_role" "prefect_agent_execution_role" {
   name = "prefect-agent-execution-role-${var.name}"
 
-assume_role_policy = jsonencode({
+  assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -116,7 +116,7 @@ assume_role_policy = jsonencode({
           Action = [
             "kms:Decrypt",
             "secretsmanager:GetSecretValue",
-            "ssm:GetParamaters"
+            "ssm:GetParameters"
           ]
           Effect = "Allow"
           Resource = [
@@ -126,6 +126,7 @@ assume_role_policy = jsonencode({
       ]
     })
   }
+  // AmazonECSTaskExecutionRolePolicy is an AWS managed role for creating ECS tasks and services
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
 }
 
@@ -140,7 +141,7 @@ resource "aws_iam_role" "prefect_agent_task_role" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "ecs-task.amazonaws.com"
+          Service = "ecs-tasks.amazonaws.com"
         }
       },
     ]
@@ -163,9 +164,10 @@ resource "aws_iam_role" "prefect_agent_task_role" {
             "ecs:DescribeTasks",
             "ecs:RegisterTaskDefinition",
             "ecs:RunTask",
+            "iam:PassRole",
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
-            "logs:GetLogStream",
+            "logs:GetLogEvents",
             "logs:PutLogEvents"
           ]
           Effect   = "Allow"
