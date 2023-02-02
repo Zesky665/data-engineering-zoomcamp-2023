@@ -34,7 +34,7 @@ provider "aws" {
 
 # Here we are creating an AWS Secrets Manager resource 
 resource "aws_secretsmanager_secret" "prefect_api_key" {
-  name = "prefect-api-key-${var.name}"
+  name = "prefect-api-key-${var.name}v2"
   force_overwrite_replica_secret = true
 }
 
