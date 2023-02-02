@@ -213,6 +213,10 @@ resource "aws_s3_bucket_acl" "example" {
   acl    = "private"
 }
 
+resource "aws_ecr_repository" "prefect_ecr_repo" {
+  name = "prefect_ecr_repo"
+}
+
 resource "aws_ecs_cluster" "prefect_agent_cluster" {
   name = "prefect-agent-${var.name}"
 }
