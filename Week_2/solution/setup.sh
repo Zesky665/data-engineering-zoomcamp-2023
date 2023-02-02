@@ -28,39 +28,38 @@ fi
 
 # step 1
 mylog 1 "Update"
-sudo apt-get update -y
+apt-get update -y
 
 # step 2
-mylog 2 "Install postgresql"
-sudo apt-get install -y postgresql 
+mylog 3 "Install python"
+apt-get install -y python3
 
 # step 3
-mylog 3 "Install python"
-sudo apt-get install -y python3
+mylog 4 "Install pip"
+apt-get install -y pip
 
 # step 4
-mylog 4 "Install pip"
-sudo apt-get install -y pip
-
-# step 5
 mylog 5 "Install prefect"
 pip install prefect
 
-# step 6
+# step 5
 mylog 6 "Install s3fs"
 pip install s3fs
 
-# step 7
+# step 6
 pip install wget
 
-# step 8
+# step 7
 pip install numpy
 
-# step 9
+# step 8
 pip install pandas
 
-# step 10
+# step 9
 pip install sqlalchemy
 
-# step 11
+# step 10
 pip install psycopg2
+
+# step 11
+pip install prefect-aws
