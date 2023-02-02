@@ -1,31 +1,3 @@
-RED="\033[1;31m"
-GREEN="\033[1;32m"
-NOCOLOR="\033[0m"
-
-mylog() {
-        STEP=$1
-        MSG=$2
-
-        echo -e "step $STEP: ${GREEN}${MSG}${NOCOLOR}"
-        logger "step $STEP: $MSG"
-}
-
-myfail() {
-        STEP=$1
-        MSG=$2
-
-        echo -e "step $STEP ERROR: ${RED}${MSG}${NOCOLOR}"
-        logger "step $STEP ERROR: $MSG"
-}
-
-# handle command line options
-if [[ $1 == "-h" ]]; then
-        echo "usage: $0"
-        echo " -h prints help"
-
-        exit 1
-fi
-
 # step 1
 mylog 1 "Update"
 apt-get update -y
@@ -59,7 +31,7 @@ pip install pandas
 pip install sqlalchemy
 
 # step 10
-pip install psycopg2
+pip install psycopg2-binary
 
 # step 11
 pip install prefect-aws
