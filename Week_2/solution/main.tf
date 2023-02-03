@@ -239,7 +239,7 @@ resource "aws_ecs_task_definition" "prefect_agent_task_definition" {
     {
       name    = "prefect-agent-${var.name}"
       image   = var.agent_image
-      command = [var.agent_queue_name]
+      command = ["prefect", "agent", "start", "-q", var.agent_queue_name]
       cpu     = var.agent_cpu
       memory  = var.agent_memory
       environment = [

@@ -11,5 +11,3 @@ RUN ./login.sh
 RUN chmod +x setup.sh
 
 RUN ./setup.sh
-
-ENTRYPOINT [ "prefect", "agent", "start", "-q week_2" ]
