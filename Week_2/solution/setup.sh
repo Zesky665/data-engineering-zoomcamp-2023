@@ -1,3 +1,5 @@
+# step 0
+apt-get install apt-utils
 # step 1
 apt-get update -y
 
