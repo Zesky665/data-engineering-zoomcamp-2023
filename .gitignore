@@ -154,3 +154,4 @@ Week_1/Solution/prefect/flows/my_secrets.py
 __init__.py
 >>>>>>> ef875e0 (update gitignore)
 Week_2/solution/.terraform/environment
+Week_2/solution/start.sh

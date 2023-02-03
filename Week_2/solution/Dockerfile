@@ -1,13 +1,11 @@
-FROM prefecthq/prefect:2-python3.9
+FROM prefecthq/prefect:2.7.7-python3.9
 
-WORKDIR Week_2/solution
-
-COPY setup.sh .
-
-RUN chmod +x setup.sh
-
-RUN ./setup.sh
+WORKDIR /Week_2/solution
 
 COPY . .
 
-CMD ["prefect", "agent start -q default"]
+RUN chmod +x start.sh
+
+RUN ./start.sh
+
+ENTRYPOINT [ "prefect", "agent", "start", "-q" ]
