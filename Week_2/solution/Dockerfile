@@ -4,8 +4,8 @@ WORKDIR /Week_2/solution
 
 COPY . .
 
-RUN chmod +x start.sh
+RUN chmod +x login.sh
 
-RUN ./start.sh
+RUN ./login.sh
 
 ENTRYPOINT [ "prefect", "agent", "start", "-q" ]
