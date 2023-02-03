@@ -12,4 +12,4 @@ RUN chmod +x setup.sh
 
 RUN ./setup.sh
 
-ENTRYPOINT [ "prefect", "agent", "start", "-q" ]
+ENTRYPOINT [ "prefect", "agent", "start", "-q" , "week_2"]
