@@ -54,6 +54,7 @@ variable "agent_task_role_arn" {
 
 variable "name" {
   description = "Unique name for this agent deployment.s"
+  default     = "prefect-default"
   type        = string
 }
 
