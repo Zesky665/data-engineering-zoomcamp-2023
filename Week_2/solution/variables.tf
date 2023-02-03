@@ -42,7 +42,7 @@ variable "agent_memory" {
 
 variable "agent_queue_name" {
   description = "Prefect queue that the agent should listen to."
-  default     = "default"
+  default     = "Week_2"
   type        = string
 }
 
