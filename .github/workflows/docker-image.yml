@@ -6,7 +6,7 @@ on:
       image:
         description: Name of the image
         required: true
-        default: 'zharec/zharec-week-2-prefect-agent'
+        default: 'zharec/week-2-prefect-agent'
         type: string
       tag:
         description: Tag of the image
