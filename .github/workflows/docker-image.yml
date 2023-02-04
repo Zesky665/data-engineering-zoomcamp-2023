@@ -19,7 +19,14 @@ jobs:
         shell: bash
         working-directory: Week_2/solution
 
+
     steps:
+    - name: Create login file for docker
+      id: prefect-login
+      run: |
+       touch login.sh
+       echo "prefect cloud login --key ${{ secrets.PREFECT_API_KEY }} --workspace ${{ secrets.PREFECT_WORKSPACE_NAME }}" >> login.sh
+       
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build -t ${{ github.event.inputs.image }}:$(date +%s) .
