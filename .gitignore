@@ -155,3 +155,7 @@ __init__.py
 >>>>>>> ef875e0 (update gitignore)
 Week_2/solution/.terraform/environment
 Week_2/solution/start.sh
+Week_2/solution/ecs.tf
+.gitignore
+Week_2/solution/network.tf
+Week_2/solution/login.sh
