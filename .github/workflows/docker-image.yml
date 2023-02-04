@@ -38,6 +38,6 @@ jobs:
        touch login.sh
        echo "prefect cloud login --key ${{ secrets.PREFECT_API_KEY }} --workspace ${{ secrets.PREFECT_WORKSPACE_NAME }}" >> login.sh
        docker build -t ${{ github.event.inputs.image }}:$(date +%s) .
-       docker login -u=${{ secret.DOCKER_USERNAME }} -p=${{ secrets.DOCKER_PASSWORD }} 
-       docker tag ${{ github.event.inputs.image }}:$(date +%s) ${{ secret.DOCKER_USERNAME }}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}
+       docker login -u=${{ secrets.DOCKER_USERNAME }} -p=${{ secrets.DOCKER_PASSWORD }} 
+       docker tag ${{ github.event.inputs.image }}:$(date +%s) ${{ secrets.DOCKER_USERNAME }}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}
        
