@@ -11,7 +11,7 @@ on:
       image:
         description: Name of the image
         required: true
-        default: 'week-2-prefect-agent'
+        default: 'week_2_prefect_agent'
         type: string
       tag:
         description: Tag of the image
@@ -45,4 +45,5 @@ jobs:
        docker build -t ${{ github.event.inputs.image }}:${{ github.event.inputs.tag }} .
        docker login -u=${{ secrets.DOCKER_USERNAME }} -p=${{ secrets.DOCKER_PASSWORD }} 
        docker tag ${{ github.event.inputs.image }}:${{ github.event.inputs.tag }} ${{ github.event.inputs.repo }}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}
+       docker push ${{ github.event.inputs.repo }}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}
        
