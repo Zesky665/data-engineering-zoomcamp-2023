@@ -1,0 +1,25 @@
+name: Docker Image CI
+
+on:
+ workflow_dispatch:
+    inputs:
+      image:
+        description: Name of the image
+        required: true
+        default: 'zharec/week_2_prefect_agent'
+        type: string
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: Week_2/solution
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag ${{ github.event.inputs.name }}:$(date +%s)
