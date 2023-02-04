@@ -3,10 +3,15 @@ name: Docker Image CI
 on:
  workflow_dispatch:
     inputs:
+      repo:
+        description: Name of the repo
+        required: true
+        default: 'zharec'
+        type: string
       image:
         description: Name of the image
         required: true
-        default: 'zharec/week-2-prefect-agent'
+        default: 'week-2-prefect-agent'
         type: string
       tag:
         description: Tag of the image
@@ -39,5 +44,5 @@ jobs:
        echo "prefect cloud login --key ${{ secrets.PREFECT_API_KEY }} --workspace ${{ secrets.PREFECT_WORKSPACE_NAME }}" >> login.sh
        docker build -t ${{ github.event.inputs.image }}:$(date +%s) .
        docker login -u=${{ secrets.DOCKER_USERNAME }} -p=${{ secrets.DOCKER_PASSWORD }} 
-       docker tag ${{ github.event.inputs.image }}:$(date +%s) ${{ secrets.DOCKER_USERNAME }}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}
+       docker tag ${{ github.event.inputs.image }}:$(date +%s) ${{ github.event.inputs.repo }}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}
        
