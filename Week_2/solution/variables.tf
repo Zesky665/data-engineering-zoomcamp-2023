@@ -24,7 +24,7 @@ variable "agent_extra_pip_packages" {
 
 variable "agent_image" {
   description = "Container image for the agent. This could be the name of the image in a public repo or ECR ARN."
-  default     = "prefecthd/prefect:2-python3.10"
+  default     = "zharec/week_2_prefect_agent:latest"
   type        = string
 }
 
@@ -60,7 +60,6 @@ variable "name" {
 
 variable "prefect_account_id" {
   description = "Uniqie name for this agent deployment."
-  default     = null
   type        = string
 }
 
