@@ -4,7 +4,7 @@ resource "aws_ecs_cluster" "prefect_agent_cluster" {
 
 resource "aws_ecs_cluster_capacity_providers" "prefect_agent_cluster_capacity_providers" {
   cluster_name       = aws_ecs_cluster.prefect_agent_cluster.name
-  capacity_providers = ["FARGATE"]
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 }
 
 resource "aws_ecs_task_definition" "prefect_agent_task_definition" {
